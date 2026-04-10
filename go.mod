@@ -3,14 +3,16 @@ module github.com/qi-mooo/dae-next
 go 1.26.0
 
 require (
+	github.com/adrg/xdg v0.5.3
 	github.com/daeuniverse/dae v0.0.0
+	github.com/gorilla/websocket v1.5.3
 	github.com/json-iterator/go v1.1.12
+	github.com/sirupsen/logrus v1.9.4
 )
 
 require (
 	github.com/Masterminds/semver/v3 v3.4.0 // indirect
 	github.com/STARRY-S/zip v0.2.3 // indirect
-	github.com/adrg/xdg v0.5.3 // indirect
 	github.com/andybalholm/brotli v1.2.0 // indirect
 	github.com/antlr/antlr4/runtime/Go/antlr/v4 v4.0.0-20230305170008-8188dc5388df // indirect
 	github.com/awnumar/fastrand v0.0.0-20210315215012-30ee0990fa2d // indirect
@@ -39,7 +41,6 @@ require (
 	github.com/golang/protobuf v1.5.4 // indirect
 	github.com/google/pprof v0.0.0-20260202012954-cb029daf43ef // indirect
 	github.com/google/uuid v1.6.0 // indirect
-	github.com/gorilla/websocket v1.5.3 // indirect
 	github.com/hashicorp/golang-lru/v2 v2.0.7 // indirect
 	github.com/inconshreveable/mousetrap v1.1.0 // indirect
 	github.com/klauspost/compress v1.18.4 // indirect
@@ -74,7 +75,6 @@ require (
 	github.com/samber/oops v1.21.0 // indirect
 	github.com/seiflotfy/cuckoofilter v0.0.0-20240715131351-a2f2c23f1771 // indirect
 	github.com/shirou/gopsutil/v4 v4.26.1 // indirect
-	github.com/sirupsen/logrus v1.9.4 // indirect
 	github.com/sorairolake/lzip-go v0.3.8 // indirect
 	github.com/spf13/afero v1.15.0 // indirect
 	github.com/spf13/cobra v1.10.2 // indirect

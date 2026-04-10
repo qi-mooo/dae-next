@@ -12,6 +12,7 @@ import (
 	"github.com/json-iterator/go"
 	"github.com/json-iterator/go/extra"
 
+	"github.com/qi-mooo/dae-next/internal/controllerapi"
 	"github.com/qi-mooo/dae-next/internal/daecontroller"
 	"github.com/qi-mooo/dae-next/internal/uiassets"
 )
@@ -29,6 +30,9 @@ func main() {
 	daecmd.ProgramName = "dae-next"
 	daecmd.ProgramShort = "dae-next is dae packaged with the next-ui workspace."
 	daecmd.ProgramLong = `dae-next is dae packaged with the next-ui workspace.`
+	daecmd.ControllerLogSinkFactory = func() daecmd.ExternalControllerLogSink {
+		return controllerapi.NewLogBroker()
+	}
 	daecmd.ControllerFactory = daecontroller.New
 
 	if err := daecmd.Execute(); err != nil {
