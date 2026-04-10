@@ -1,6 +1,7 @@
 # daed Web UI
 
-这个目录是 dae 的内置 Web UI 静态资源目录。
+这个目录是 `dae-next` 的 Web UI 静态资源目录。
+默认构建会把这些文件 embed 进 `dae-next` 二进制；`noembed` 变体则要求运行时从磁盘读取这些文件。
 
 当前 UI 覆盖这些页面：
 
@@ -34,7 +35,7 @@
 
 ## 内置 WebUI 什么时候会启用
 
-当前实现里，内置 WebUI 只有在下面几个条件同时满足时才会由 dae 挂载到 `/ui/`：
+当前实现里，内置 WebUI 只有在下面几个条件同时满足时才会由 `dae-next` 挂载到 `/ui/`：
 
 1. `global.external_controller` 已配置
 2. `global.external_controller_secret` 非空
@@ -54,7 +55,14 @@ http://10.0.0.253:9090/ui/
 
 ## UI 资源放哪里
 
-`dae-next` 会优先查找磁盘上的 WebUI 目录；找不到时再回退到二进制里内置的 UI。常用覆盖方式有三种：
+`dae-next` 会优先查找磁盘上的 WebUI 目录；找不到时再回退到二进制里内置的 UI。查找优先级可以理解为：
+
+1. `DAE_WEBUI_DIR`
+2. 可执行文件附近或当前工作目录附近的 `ui/`
+3. 系统共享目录里的 `ui/`
+4. 二进制内置的 embed UI
+
+常用覆盖方式有三种：
 
 1. 设置环境变量 `DAE_WEBUI_DIR=/path/to/ui`
 2. 把整个 `ui/` 目录放到 `dae` 可执行文件旁边，或当前工作目录附近
@@ -62,7 +70,8 @@ http://10.0.0.253:9090/ui/
    - `/usr/share/dae/ui`
    - `/usr/local/share/dae/ui`
 
-如果你不需要覆盖 UI，直接部署 `dae-next` 二进制即可，不必再额外复制静态文件。
+如果你使用默认 embed 构建，并且不需要覆盖 UI，直接部署 `dae-next` 二进制即可，不必再额外复制静态文件。
+如果你使用的是 `noembed` 构建，则必须提供磁盘上的 `ui/` 目录。
 
 对 OpenWrt / 路由器部署，如果要覆盖内置 UI，最直接的方式就是：
 
@@ -104,7 +113,7 @@ global {
 
 ### 方式 1：直接随仓库运行
 
-如果你是在这个仓库里运行 `dae`，并且当前工作目录或可执行文件附近能找到 `ui/`，dae 会自动发现它。
+如果你是在这个仓库里运行 `dae-next`，并且当前工作目录或可执行文件附近能找到 `ui/`，`dae-next` 会自动优先使用磁盘上的这些文件。
 
 适合本地开发。
 
@@ -123,10 +132,20 @@ cp -r ui/* /usr/share/dae/ui/
 
 ```bash
 export DAE_WEBUI_DIR=/opt/dae/ui
-dae run -c /etc/dae/config.dae
+dae-next run -c /etc/dae/config.dae
 ```
 
 适合你不想把资源放到默认目录的时候。
+
+### 方式 4：直接使用 embed UI
+
+如果你使用的是默认构建产物，可以只部署二进制：
+
+```bash
+cp dae-next /usr/bin/dae
+```
+
+这种方式下，只要配置了 `external_controller` 和 `external_controller_secret`，`/ui/` 就能直接工作。
 
 ## OpenWrt / 路由器示例
 
@@ -141,13 +160,13 @@ global {
 }
 ```
 
-2. 把 UI 资源推到路由器：
+2. 如果你使用的是 `noembed` 版本，把 UI 资源推到路由器：
 
 ```bash
 scp -O -r ui root@10.0.0.253:/usr/share/dae/
 ```
 
-3. 重启 dae：
+3. 重启 `dae` / `dae-next`：
 
 ```bash
 ssh root@10.0.0.253 '/etc/init.d/dae restart'
@@ -163,7 +182,7 @@ http://10.0.0.253:9090/ui/#token=password
 
 ### 内置模式
 
-如果页面是通过 dae 自己提供的 `/ui/` 打开的：
+如果页面是通过 `dae-next` 自己提供的 `/ui/` 打开的：
 
 - UI 会自动把 controller 地址识别成当前页面同源地址
 - 推荐把 token 放在 URL fragment 里：
@@ -202,7 +221,7 @@ http://127.0.0.1:4173/?controller=http://10.0.0.253:9090#token=password
 
 ## 认证方式
 
-UI 使用 dae 的外部控制器鉴权：
+UI 使用 `dae` / `dae-next` 的外部控制器鉴权：
 
 - HTTP 请求：`Authorization: Bearer <token>`
 - WebSocket 请求：`?token=<token>`
@@ -245,7 +264,8 @@ UI 使用 dae 的外部控制器鉴权：
 
 - 没配 `external_controller`
 - 没配 `external_controller_secret`
-- UI 资源目录没被 dae 找到
+- UI 资源目录没被 `dae-next` 找到
+- 或者你使用的是 `noembed` 二进制但没有部署磁盘上的 `ui/`
 
 ### 页面能打开，但一直没登录
 
@@ -258,7 +278,7 @@ UI 使用 dae 的外部控制器鉴权：
 
 ### 修改了静态文件但页面没更新
 
-如果是内置 `/ui/` 模式，更新静态文件后重启 dae 最稳妥：
+如果是内置 `/ui/` 模式，更新静态文件后重启 `dae` / `dae-next` 最稳妥：
 
 ```bash
 /etc/init.d/dae restart
