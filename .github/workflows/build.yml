@@ -62,6 +62,15 @@ jobs:
           go-version-file: go.mod
           cache: true
 
+      - name: Install eBPF Build Dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y clang-15 llvm-15
+
+      - name: Generate dae eBPF Bindings
+        run: |
+          GOWORK=off make -C dae ebpf CLANG=clang-15 STRIP=llvm-strip-15
+
       - name: Build
         env:
           GOOS: ${{ matrix.goos }}
