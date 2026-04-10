@@ -1,0 +1,94 @@
+name: build
+
+on:
+  push:
+    branches:
+      - main
+    tags:
+      - "v*"
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          submodules: recursive
+
+      - name: Setup Go
+        uses: actions/setup-go@v5
+        with:
+          go-version-file: go.mod
+          cache: true
+
+      - name: Test controller shell
+        run: GOWORK=off go test ./internal/controllerapi
+
+  build:
+    runs-on: ubuntu-latest
+    needs: test
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - goos: linux
+            goarch: amd64
+            artifact: dae-next-linux-amd64
+            tags: ""
+          - goos: linux
+            goarch: amd64
+            artifact: dae-next-linux-amd64-noembed
+            tags: noembedui
+          - goos: linux
+            goarch: arm64
+            artifact: dae-next-linux-arm64
+            tags: ""
+          - goos: linux
+            goarch: arm64
+            artifact: dae-next-linux-arm64-noembed
+            tags: noembedui
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          submodules: recursive
+
+      - name: Setup Go
+        uses: actions/setup-go@v5
+        with:
+          go-version-file: go.mod
+          cache: true
+
+      - name: Build
+        env:
+          GOOS: ${{ matrix.goos }}
+          GOARCH: ${{ matrix.goarch }}
+          CGO_ENABLED: "0"
+        run: |
+          set -eu
+          VERSION="dae-next-${GITHUB_SHA::7}"
+          if [ "${GITHUB_REF_TYPE:-}" = "tag" ]; then
+            VERSION="${GITHUB_REF_NAME}"
+          fi
+          BUILD_TAGS=""
+          if [ -n "${{ matrix.tags }}" ]; then
+            BUILD_TAGS="-tags ${{ matrix.tags }}"
+          fi
+          mkdir -p "dist/${{ matrix.artifact }}"
+          GOWORK=off go build ${BUILD_TAGS} -trimpath \
+            -ldflags "-s -w -X main.Version=${VERSION}" \
+            -o "dist/${{ matrix.artifact }}/dae-next" \
+            ./cmd/dae-next
+          tar -czf "dist/${{ matrix.artifact }}.tar.gz" -C "dist/${{ matrix.artifact }}" dae-next
+          sha256sum "dist/${{ matrix.artifact }}.tar.gz" > "dist/${{ matrix.artifact }}.tar.gz.sha256"
+
+      - name: Upload Artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ matrix.artifact }}
+          path: |
+            dist/${{ matrix.artifact }}.tar.gz
+            dist/${{ matrix.artifact }}.tar.gz.sha256

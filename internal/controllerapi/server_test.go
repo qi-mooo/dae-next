@@ -10,6 +10,8 @@ import (
 	"path/filepath"
 	"testing"
 	"time"
+
+	embeddedui "github.com/qi-mooo/dae-next/ui"
 )
 
 type fakeProvider struct {
@@ -461,5 +463,36 @@ func TestWebUIIsServedWithoutBreakingAPIAuth(t *testing.T) {
 	defer resp.Body.Close()
 	if resp.StatusCode != http.StatusUnauthorized {
 		t.Fatalf("expected version to remain unauthorized, got %d", resp.StatusCode)
+	}
+}
+
+func TestEmbeddedWebUIFallbackIsAvailable(t *testing.T) {
+	if !embeddedui.Enabled {
+		t.Skip("embedded ui disabled for this build")
+	}
+	ui := discoverWebUIWithDirs([]string{filepath.Join(t.TempDir(), "missing-ui")})
+	if ui == nil {
+		t.Fatal("expected embedded ui fallback")
+	}
+	if ui.source != "embedded" {
+		t.Fatalf("expected embedded source, got %q", ui.source)
+	}
+
+	req := httptest.NewRequest(http.MethodGet, "/ui/", nil)
+	recorder := httptest.NewRecorder()
+	ui.serveHTTP(recorder, req)
+
+	resp := recorder.Result()
+	defer resp.Body.Close()
+	if resp.StatusCode != http.StatusOK {
+		body, _ := io.ReadAll(resp.Body)
+		t.Fatalf("embedded ui status = %d body=%s", resp.StatusCode, string(body))
+	}
+	body, err := io.ReadAll(resp.Body)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !bytes.Contains(body, []byte("<!doctype html>")) {
+		t.Fatalf("embedded ui body missing html doctype: %s", string(body))
 	}
 }

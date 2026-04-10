@@ -1,6 +1,7 @@
 package controllerapi
 
 import (
+	"io/fs"
 	"net/http"
 	"os"
 	"path/filepath"
@@ -8,28 +9,49 @@ import (
 
 	"github.com/adrg/xdg"
 	"github.com/daeuniverse/dae/common/consts"
+	embeddedui "github.com/qi-mooo/dae-next/ui"
 )
 
 const webUIDirEnv = "DAE_WEBUI_DIR"
 
 type webUI struct {
 	dir        string
+	source     string
 	fileServer http.Handler
 }
 
 func discoverWebUI() *webUI {
-	for _, dir := range webUIDirs() {
+	return discoverWebUIWithDirs(webUIDirs())
+}
+
+func discoverWebUIWithDirs(dirs []string) *webUI {
+	for _, dir := range dirs {
 		if dir == "" {
 			continue
 		}
 		if isWebUIDir(dir) {
-			return &webUI{
-				dir:        dir,
-				fileServer: http.FileServer(http.Dir(dir)),
-			}
+			return newDiskWebUI(dir)
 		}
 	}
-	return nil
+	return newEmbeddedWebUI()
+}
+
+func newDiskWebUI(dir string) *webUI {
+	return &webUI{
+		dir:        dir,
+		source:     "disk",
+		fileServer: http.FileServer(http.Dir(dir)),
+	}
+}
+
+func newEmbeddedWebUI() *webUI {
+	if !isWebUIFS(embeddedui.Files) {
+		return nil
+	}
+	return &webUI{
+		source:     "embedded",
+		fileServer: http.FileServer(http.FS(embeddedui.Files)),
+	}
 }
 
 func webUIDirs() []string {
@@ -83,9 +105,20 @@ func webUIDirs() []string {
 }
 
 func isWebUIDir(dir string) bool {
-	required := []string{"index.html", "styles.css", "script.js"}
-	for _, name := range required {
+	for _, name := range requiredWebUIFiles {
 		info, err := os.Stat(filepath.Join(dir, name))
+		if err != nil || info.IsDir() {
+			return false
+		}
+	}
+	return true
+}
+
+var requiredWebUIFiles = []string{"index.html", "styles.css", "script.js"}
+
+func isWebUIFS(fsys fs.FS) bool {
+	for _, name := range requiredWebUIFiles {
+		info, err := fs.Stat(fsys, name)
 		if err != nil || info.IsDir() {
 			return false
 		}

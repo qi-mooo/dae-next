@@ -14,7 +14,6 @@ import (
 
 	"github.com/qi-mooo/dae-next/internal/controllerapi"
 	"github.com/qi-mooo/dae-next/internal/daecontroller"
-	"github.com/qi-mooo/dae-next/internal/uiassets"
 )
 
 var Version = "dev"
@@ -24,7 +23,6 @@ func main() {
 	extra.RegisterFuzzyDecoders()
 
 	http.DefaultClient.Timeout = 30 * time.Second
-	uiassets.EnsureEnv()
 
 	daecmd.Version = Version
 	daecmd.ProgramName = "dae-next"

@@ -38,7 +38,7 @@
 
 1. `global.external_controller` 已配置
 2. `global.external_controller_secret` 非空
-3. UI 静态资源在磁盘上可被 dae 找到
+3. `dae-next` 内置的 UI 可用，或者磁盘上的 UI 目录可被找到
 
 访问地址：
 
@@ -54,7 +54,7 @@ http://10.0.0.253:9090/ui/
 
 ## UI 资源放哪里
 
-dae 会按顺序查找 WebUI 目录。常用方式有三种：
+`dae-next` 会优先查找磁盘上的 WebUI 目录；找不到时再回退到二进制里内置的 UI。常用覆盖方式有三种：
 
 1. 设置环境变量 `DAE_WEBUI_DIR=/path/to/ui`
 2. 把整个 `ui/` 目录放到 `dae` 可执行文件旁边，或当前工作目录附近
@@ -62,7 +62,9 @@ dae 会按顺序查找 WebUI 目录。常用方式有三种：
    - `/usr/share/dae/ui`
    - `/usr/local/share/dae/ui`
 
-对 OpenWrt / 路由器部署，最直接的方式就是：
+如果你不需要覆盖 UI，直接部署 `dae-next` 二进制即可，不必再额外复制静态文件。
+
+对 OpenWrt / 路由器部署，如果要覆盖内置 UI，最直接的方式就是：
 
 ```text
 /usr/share/dae/ui/
@@ -115,7 +117,7 @@ mkdir -p /usr/share/dae/ui
 cp -r ui/* /usr/share/dae/ui/
 ```
 
-适合打包、OpenWrt、systemd 服务和常规部署。
+适合打包、OpenWrt、systemd 服务和常规部署，且会覆盖内置 UI。
 
 ### 方式 3：显式指定目录
 
