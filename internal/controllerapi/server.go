@@ -14,7 +14,7 @@ import (
 	"sync"
 	"time"
 
-	daecontrolapi "github.com/daeuniverse/dae/controlapi"
+	daeapi "github.com/daeuniverse/dae/controlapi/api"
 	"github.com/gorilla/websocket"
 	"github.com/sirupsen/logrus"
 )
@@ -40,16 +40,16 @@ type ServerConfig struct {
 	Secret string
 }
 
-type Provider = daecontrolapi.Provider
-type Traffic = daecontrolapi.Traffic
-type ConnectionsSnapshot = daecontrolapi.ConnectionsSnapshot
-type Connection = daecontrolapi.Connection
-type Memory = daecontrolapi.Memory
-type Config = daecontrolapi.Config
-type DaeConfigDocument = daecontrolapi.DaeConfigDocument
-type DaeConfigFile = daecontrolapi.DaeConfigFile
-type DelayHistory = daecontrolapi.DelayHistory
-type Proxy = daecontrolapi.Proxy
+type Provider = daeapi.Provider
+type Traffic = daeapi.Traffic
+type ConnectionsSnapshot = daeapi.ConnectionsSnapshot
+type Connection = daeapi.Connection
+type Memory = daeapi.Memory
+type Config = daeapi.Config
+type DaeConfigDocument = daeapi.DaeConfigDocument
+type DaeConfigFile = daeapi.DaeConfigFile
+type DelayHistory = daeapi.DelayHistory
+type Proxy = daeapi.Proxy
 
 type Server struct {
 	cfg      ServerConfig
@@ -337,7 +337,7 @@ func (s *Server) handleProxyByName(w http.ResponseWriter, r *http.Request) {
 		}
 		if err := s.provider.UpdateProxy(name, req.Name); err != nil {
 			status := http.StatusBadRequest
-			if errors.Is(err, daecontrolapi.ErrProviderNotFound) {
+			if errors.Is(err, daeapi.ErrProviderNotFound) {
 				status = http.StatusNotFound
 			}
 			writeError(w, status, &HTTPError{Message: err.Error()})
@@ -347,7 +347,7 @@ func (s *Server) handleProxyByName(w http.ResponseWriter, r *http.Request) {
 	case http.MethodDelete:
 		if err := s.provider.ResetProxy(name); err != nil {
 			status := http.StatusBadRequest
-			if errors.Is(err, daecontrolapi.ErrProviderNotFound) {
+			if errors.Is(err, daeapi.ErrProviderNotFound) {
 				status = http.StatusNotFound
 			}
 			writeError(w, status, &HTTPError{Message: err.Error()})
