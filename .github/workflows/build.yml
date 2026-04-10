@@ -37,19 +37,9 @@ jobs:
           - goos: linux
             goarch: amd64
             artifact: dae-next-linux-amd64
-            tags: ""
-          - goos: linux
-            goarch: amd64
-            artifact: dae-next-linux-amd64-noembed
-            tags: noembedui
           - goos: linux
             goarch: arm64
             artifact: dae-next-linux-arm64
-            tags: ""
-          - goos: linux
-            goarch: arm64
-            artifact: dae-next-linux-arm64-noembed
-            tags: noembedui
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -82,12 +72,8 @@ jobs:
           if [ "${GITHUB_REF_TYPE:-}" = "tag" ]; then
             VERSION="${GITHUB_REF_NAME}"
           fi
-          BUILD_TAGS=""
-          if [ -n "${{ matrix.tags }}" ]; then
-            BUILD_TAGS="-tags ${{ matrix.tags }}"
-          fi
           mkdir -p "dist/${{ matrix.artifact }}"
-          GOWORK=off go build ${BUILD_TAGS} -trimpath \
+          GOWORK=off go build -trimpath \
             -ldflags "-s -w -X main.Version=${VERSION}" \
             -o "dist/${{ matrix.artifact }}/dae-next" \
             ./cmd/dae-next
