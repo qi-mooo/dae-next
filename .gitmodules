@@ -1,0 +1,4 @@
+[submodule "dae"]
+	path = dae
+	url = git@github.com:qi-mooo/dae.git
+	branch = split/minimal-dae
