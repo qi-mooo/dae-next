@@ -1869,6 +1869,21 @@ function refreshProxyCollections(rawProxies) {
   }
 }
 
+function updateLocalProxyGroupSelection(groupName, proxyName) {
+  if (!groupName || !state.proxies[groupName]) {
+    return;
+  }
+  state.proxies = {
+    ...state.proxies,
+    [groupName]: {
+      ...state.proxies[groupName],
+      now: proxyName,
+    },
+  };
+  state.proxySignature = proxySnapshotSignature(state.proxies);
+  refreshProxyCollections(state.proxies);
+}
+
 function currentGroup() {
   return state.groups.find((group) => group.name === state.selectedGroup) || null;
 }
@@ -4373,13 +4388,7 @@ async function selectProxy(name) {
       method: "PUT",
       body: JSON.stringify({ name }),
     });
-    if (state.proxies[group.name]) {
-      state.proxies[group.name] = {
-        ...state.proxies[group.name],
-        now: name,
-      };
-      state.proxySignature = proxySnapshotSignature(state.proxies);
-    }
+    updateLocalProxyGroupSelection(group.name, name);
     state.editorNoteText = msg("proxies.switch.result", "Switched {group} to {name} through /proxies/{group}.", {
       group: group.name,
       name,
