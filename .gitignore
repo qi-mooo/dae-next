@@ -1,2 +1,3 @@
 .superset/
 build/
+.DS_Store
